@@ -1,0 +1,55 @@
+Project Spec: The Gatekeeper (Rate Limiter Service)
+Status: Draft Priority: P0 Owner: @Mayank
+
+1. High-Level Objective
+Build a standalone Node.js HTTP service that acts as a rate-limiting middleware. It simulates a "protected API" where clients (identified by IP) are limited to a specific request quota using the Token Bucket Algorithm.
+
+2. Core Functional Requirements
+Algorithm: You must strictly implement the Token Bucket Algorithm.
+
+Identification: Users are identified by their IP address (mock this if testing locally, or use req.ip).
+
+Configuration: The bucket must support:
+
+Capacity: Max tokens a bucket can hold (e.g., 10).
+
+Refill Rate: Rate at which tokens are added (e.g., 1 token per second).
+
+Success Flow: If the user has tokens:
+
+Decrement token count by 1.
+
+Return HTTP 200 OK.
+
+Return JSON: { "status": "success", "message": "Request processed" }.
+
+Failure Flow: If the user has 0 tokens:
+
+Return HTTP 429 Too Many Requests.
+
+Return JSON: { "status": "error", "message": "Too many requests" }.
+
+3. Interface Requirements (HTTP Headers)
+Every response (Success or Failure) must include these headers to inform the client of their status:
+
+X-RateLimit-Limit: The total bucket capacity.
+
+X-RateLimit-Remaining: Current tokens available.
+
+X-RateLimit-Reset: The approximate time (in Unix epoch seconds or request-delta) when the bucket will be fully refreshed or when the next token is available.
+
+4. Technical Constraints
+Language: TypeScript (Strict mode).
+
+Framework: Native Node http or a lightweight framework (Express/Fastify).
+
+Storage: In-Memory (No external database like Redis yet).
+
+Modularity: The "Rate Limiter" logic must be decoupled from the "HTTP Server" logic. I should be able to take your RateLimiter class and use it in a completely different project without changing code.
+
+5. Acceptance Criteria (Definition of Done)
+Code Quality: Clean folder structure, interfaces defined, strict types.
+
+Correctness: A user cannot exceed the limit. Tokens must refill accurately over time (not just resetting at the top of the minute).
+
+Testing: You must verify it works (e.g., via a script that fires 20 requests and asserts that the 11th fails).

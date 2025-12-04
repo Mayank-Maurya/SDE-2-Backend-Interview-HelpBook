@@ -1,0 +1,1 @@
+export interface RateLimiterHeader { 'X-RateLimit-Limit': number, 'X-RateLimit-Remaining': number, 'X-RateLimit-Reset': number }
