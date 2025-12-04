@@ -1,4 +1,5 @@
-import { RateLimiterHeader } from "../interfaces/rate_limiter";
+import { timeEnd } from "console";
+import { RateLimiterHeader, RateLimiterResponse } from "../interfaces/rate_limiter";
 
 class Bucket {
     declare tokens: number;
@@ -17,47 +18,44 @@ class RateLimiter {
         this.UserBucketMap = new Map();
         this.bucketSize = bucketSize;
         this.refillRate = refillRate;
-        setInterval(this.processRefill, this.refillRate * 1000);
     }
 
-    processRefill = () => {
-        console.log(`ran on ${new Date().toISOString()}`)
-        for (let [userIp, bucket] of this.UserBucketMap.entries()) {
-            if (bucket.initTime + this.refillRate <= Date.now()) {
-                if (bucket.tokens < this.bucketSize) {
-                    bucket.tokens = bucket.tokens + 1;
-                    this.UserBucketMap.set(userIp, bucket);
-                }
-            }
-        }
-    }
-
-    ProcessUserRequest(userIp: string): RateLimiterHeader {
+    ProcessUserRequest(userIp: string): RateLimiterResponse {
         // check if the user already exists
+        const curTime = Date.now() / 1000;
         let userBucket: Bucket | undefined = this.UserBucketMap.get(userIp);
         if (!userBucket) {
             // assign the user a new bucket
-            userBucket = new Bucket(this.bucketSize, Date.now());
+            userBucket = new Bucket(this.bucketSize, curTime);
+            this.UserBucketMap.set(userIp, userBucket);
         }
 
-        // check if the bucket is empty
-        if (userBucket.tokens !== 0) {
-            userBucket.tokens = userBucket.tokens - 1;
-            this.UserBucketMap.set(userIp, userBucket);
-        } else {
-            this.UserBucketMap.set(userIp, userBucket);
-            return {
-                "X-RateLimit-Limit": this.bucketSize,
-                "X-RateLimit-Remaining": -1,
-                "X-RateLimit-Reset": (Date.now() - userBucket.initTime + this.refillRate)
-            };
+        const timePassed = curTime - userBucket.initTime;
+        const tokensToAdd = timePassed / this.refillRate;
+
+        userBucket.tokens = Math.min(this.bucketSize, userBucket.tokens + tokensToAdd);
+        userBucket.initTime = curTime;
+        
+        let allowed = false;
+        if (userBucket.tokens >= 1) {
+            userBucket.tokens -= 1;
+            allowed = true;
         }
+
+        const timeToNextToken = this.refillRate - ((userBucket.tokens % 1) * this.refillRate);
 
         return {
-            "X-RateLimit-Limit": this.bucketSize,
-            "X-RateLimit-Remaining": userBucket.tokens,
-            "X-RateLimit-Reset": (Date.now() - userBucket.initTime + this.refillRate)
+            allowed: allowed,
+            headers: {
+                "X-RateLimit-Limit": this.bucketSize,
+                "X-RateLimit-Remaining": Math.floor(userBucket.tokens),
+                "X-RateLimit-Reset": allowed ? 0 : timeToNextToken,
+            }
         };
+    }
+
+    isRefillingTime(last_refill_timestamp: number, curTime: number): boolean {
+        return (last_refill_timestamp + this.refillRate) > curTime;
     }
     
 }

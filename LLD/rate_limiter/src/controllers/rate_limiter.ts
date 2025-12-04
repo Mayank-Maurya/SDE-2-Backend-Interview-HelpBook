@@ -7,12 +7,12 @@ const router = express.Router();
 router.get('/', async (request: Request, response: Response, next: NextFunction) => {
     const userIp = request.ip || '127.0.0.1';
 
-    let resultHeader: RateLimiterHeader;
+    let resultHeader;
     resultHeader = rateLimiter.ProcessUserRequest(userIp);
 
-    response.header(resultHeader);
+    response.header(resultHeader.headers);
     let result;
-    if (resultHeader['X-RateLimit-Remaining'] === -1) {
+    if (!resultHeader.allowed) {
         result = {
             status: "error", 
             message: "Too many requests"
