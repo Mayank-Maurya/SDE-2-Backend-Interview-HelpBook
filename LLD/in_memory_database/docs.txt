@@ -1,0 +1,93 @@
+Project Spec: The Vault (In-Memory Key-Value Store)
+Status: Draft Priority: P0 Owner: @Mayank
+
+1. High-Level Objective
+Design and implement an in-memory Key-Value database that supports basic CRUD operations and ACID-like Transactions. The system must allow a user to start a transaction, make changes, and either "Commit" them (save permanently) or "Rollback" (revert to the state before the transaction started).
+
+2. Core Functional Requirements
+Your class InMemoryDB must support the following methods:
+
+A. Basic Operations
+
+set(key: string, value: any): void
+
+Stores a value. If the key exists, it overwrites it.
+
+get(key: string): any | null
+
+Returns the value associated with the key. Returns null (or undefined) if the key does not exist.
+
+delete(key: string): void
+
+Removes the key from the store.
+
+B. Transaction Operations
+
+begin(): void
+
+Starts a new transaction.
+
+Constraint: For this version, assume Single Threaded / Single Transaction (we do not need to handle multiple concurrent transactions yet). If begin() is called while a transaction is already active, throw an error.
+
+commit(): void
+
+Applies all changes made since begin() to the main state.
+
+After commit, the transaction is closed.
+
+If no transaction is active, throw an error.
+
+rollback(): void
+
+Discards all changes made since begin().
+
+The database state returns to exactly how it was before the transaction started.
+
+If no transaction is active, throw an error.
+
+3. Detailed Behavior (The "Contract")
+Scenario 1: Isolation (Read your own writes) If I am inside a transaction, I should see my changes immediately, even before I commit.
+
+TypeScript
+
+db.set("a", 10);
+db.begin();
+db.set("a", 20);
+console.log(db.get("a")); // MUST return 20 (Inside transaction view)
+db.rollback();
+console.log(db.get("a")); // MUST return 10
+Scenario 2: Deletes within Transactions
+
+TypeScript
+
+db.set("a", 10);
+db.begin();
+db.delete("a");
+console.log(db.get("a")); // MUST return null
+db.rollback();
+console.log(db.get("a")); // MUST return 10
+4. Technical Constraints (The SDE-3 Filter)
+No Deep Cloning: You cannot simply copy the entire database Map when begin() is called.
+
+Why? If the DB has 10GB of data, copying it takes too long.
+
+Requirement: You must use a "Differential" approach (store only what changed).
+
+Type Safety: Strict TypeScript.
+
+Error Handling: Proper error throwing for invalid states (e.g., calling commit without begin).
+
+5. Acceptance Criteria
+Unit Tests: You must create a test script that verifies:
+
+Commit saves data.
+
+Rollback discards data.
+
+Nested operations work (e.g., set then delete inside a transaction).
+
+Code Structure:
+
+Separate the InMemoryDB class from the testing logic.
+
+Clean interface definitions.
