@@ -1,0 +1,22 @@
+
+SOLID PRINCIPLES
+Singleton pattern
+strategy pattern
+factory pattern
+decorator pattern
+20 questions of db in postgres in leetcode.
+
+ 
+Agentic Orchestration & MAS: Learn to design Multi-Agent Systems (MAS) where specialized agents (planners, executors, supervisors) collaborate. Master frameworks like LangChain, CrewAI, and LangGraph for disciplined orchestration.
+
+Context Engineering: Replace "prompt engineering" with "context engineering." You must learn how to select, compress, and structure data so agents can operate without "token snowballing" or context window saturation.
+
+Model Context Protocol (MCP) & Universal Standards: Master MCP as the "internal wiki" for agents to connect model reasoning to proprietary datasets like SQL or Slack.
+
+Vector Databases & Advanced RAG: Deepen your knowledge of pgvector, Pinecone, or Milvus to provide agents with a "long-term memory" and factual grounding.
+
+Distributed Resiliency Patterns: As AI-generated code is non-deterministic, you must master Saga patterns, Circuit Breakers, and Event Sourcing to build safety nets that make failures survivable.
+
+Deterministic Verification: Move from writing unit tests to building automated "Verification Layers" that audit agent-generated output for security vulnerabilities and performance bottlenecks.
+
+Cloud-Native & Supercomputing Infrastructure: Understand the hardware-software interplay, specifically managing GPU workloads and high-throughput gRPC/Protobuf APIs that handle the 2x performance demands of agentic systems.
