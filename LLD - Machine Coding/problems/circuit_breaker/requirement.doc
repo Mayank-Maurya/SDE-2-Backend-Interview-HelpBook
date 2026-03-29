@@ -1,0 +1,40 @@
+🔧 Machine Coding Problem: Circuit Breaker
+Background
+In distributed systems, services call other services — payment gateways, third-party APIs, databases. When a downstream service starts failing, naively retrying hammers it further. A Circuit Breaker protects your system by stopping calls to a failing service and allowing it time to recover.
+
+Problem Statement
+Implement a CircuitBreaker class in TypeScript that wraps any async function call and manages failure states automatically.
+
+The Circuit Breaker has 3 states:
+StateBehaviourCLOSEDNormal operation. Calls go through. Failures are tracked.OPENCircuit is tripped. All calls fail immediately without invoking the function.HALF_OPENAfter a cooldown, one probe call is allowed through to test recovery.
+
+Functional Requirements
+
+Failure Threshold — After N consecutive failures, transition from CLOSED → OPEN.
+Cooldown Period — After being OPEN for T milliseconds, transition to HALF_OPEN.
+Recovery — If the probe call in HALF_OPEN succeeds, go back to CLOSED (reset failure count). If it fails, go back to OPEN (restart cooldown).
+Fast Fail — While OPEN, throw a specific error (e.g., CircuitOpenError) immediately without calling the wrapped function.
+Configurable — Accept failureThreshold, cooldownMs as config.
+
+
+Non-Functional Requirements
+
+Clean TypeScript — proper types, no any unless truly justified.
+The wrapped function should be generic (work with any async function signature).
+Handle edge cases: what if two calls come in simultaneously during HALF_OPEN?
+
+
+Example Usage
+typescriptconst breaker = new CircuitBreaker({
+  failureThreshold: 3,
+  cooldownMs: 5000,
+});
+
+const result = await breaker.call(() => fetchFromPaymentGateway(payload));
+
+Constraints & Assumptions
+
+In-memory state only (no Redis, no persistence needed).
+You don't need to implement the wrapped function itself — just the breaker.
+Use setTimeout/Date.now() for timing — no external libraries.
+Node.js/TypeScript environment. No frontend code needed.
